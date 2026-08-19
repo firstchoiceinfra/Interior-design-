@@ -1,114 +1,116 @@
 import streamlit as st
 import time
 
-# पेज कॉन्फ़िगरेशन
-st.set_page_config(
-    page_title="AI Interior & Mandir Designer",
-    page_icon="🛋️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# पेज सेटअप
+st.set_page_config(page_title="Instant AI Interior", page_icon="⚡", layout="wide")
 
-# 1. कस्टम CSS - आधुनिक लुक और स्मूथ ट्रांजिशन के लिए
+# CSS: स्मूथ ट्रांज़िशन और फास्ट UI
 st.markdown("""
-    <style>
-    .main { background-color: #0f172a; color: #f8fafc; }
-    .stButton>button {
-        background: linear-gradient(90deg, #f59e0b, #ea580c);
-        color: white;
-        font-weight: bold;
-        border-radius: 10px;
-        border: none;
-        padding: 0.6rem 1.2rem;
+<style>
+    div[data-baseweb="tab-list"] { gap: 10px; }
+    button[data-baseweb="tab"] {
+        font-size: 16px;
+        font-weight: 600;
+        padding: 10px 20px;
+        border-radius: 8px;
     }
-    </style>
+    .stButton>button {
+        width: 100%;
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# 2. स्टेट मैनेजमेंट (ताकि डेटा कभी रीलोड पर गायब न हो)
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "नया डिज़ाइन बनाएं"
-if "results" not in st.session_state:
-    st.session_state.results = []
+# स्टेट इनिशियलाइज़ेशन
+if "layouts" not in st.session_state:
+    st.session_state.layouts = []
 
-# 3. लैग-फ्री साइडबार (Persistent Sidebar)
-with st.sidebar:
-    st.markdown("## ✨ **AI Studio**")
-    st.caption("स्मार्ट इंटीरियर व मंदिर प्लानर")
-    st.divider()
-    
-    # यह मेनू कभी रीलोड नहीं होगा
-    selected_page = st.radio(
-        "नेविगेशन",
-        ["नया डिज़ाइन बनाएं", "गैलरी (Saved Designs)", "सेटिंग्स"],
-        label_visibility="collapsed"
-    )
-    st.session_state.active_tab = selected_page
+# क्लाइंट-साइड 0-लैग नेविगेशन टैब्स (1-क्लिक इंस्टेंट स्विच)
+tab_design, tab_gallery, tab_settings = st.tabs([
+    "✨ नया डिज़ाइन बनाएं", 
+    "🖼️ सेव की गई गैलरी", 
+    "⚙️ सेटिंग्स"
+])
 
-# 4. मुख्य कंटेंट (इंस्टेंट स्विचिंग)
-if st.session_state.active_tab == "नया डिज़ाइन बनाएं":
-    st.title("🛋️ ऑटोमैटिक AI इंटीरियर डिज़ाइनर")
-    st.write("अपने हॉल/कमरे की खाली फोटो डालें, फर्नीचर व मंदिर चुनें और 4 अलग-अलग लेआउट देखें।")
+# --- TAB 1: DESIGN STUDIO ---
+with tab_design:
+    col_left, col_right = st.columns([1, 1.2], gap="large")
 
-    col1, col2, col3 = st.columns([1.2, 1, 1])
-
-    with col1:
-        st.subheader("1. फोटो अपलोड करें")
-        uploaded_file = st.file_uploader("कमरे की फोटो चुनें", type=["jpg", "jpeg", "png"])
-        if uploaded_file:
-            st.image(uploaded_file, caption="आपकी ओरिजिनल फोटो", use_container_width=True)
-
-    with col2:
-        st.subheader("2. सोफ़ा स्टाइल")
-        sofa_type = st.selectbox(
-            "सोफ़ा का प्रकार चुनें:",
-            ["L-Shape Corner Sofa (लक्ज़री)", "3+1+1 Classic Setup", "Curved Modern Lounge", "Compact 2-Seater + Recliner"]
-        )
-
-    with col3:
-        st.subheader("3. मंदिर व लाइटिंग")
-        mandir_type = st.selectbox(
-            "मंदिर का प्रकार चुनें:",
-            ["लकड़ी का नक्काशीदार मंदिर + वॉर्म LED", "व्हाइट मार्बल मंदिर + गोल्डन आर्क", "वॉल-माउंटेड फ्लोटिंग मंदिर", "जालीदार बैकड्रॉप + स्पॉटलाइट्स"]
-        )
-
-    st.markdown("---")
-
-    # जनरेट बटन
-    if st.button("🚀 4 अलग-अलग लेआउट जनरेट करें (East, West, North, Corner)", use_container_width=True):
-        if not uploaded_file:
-            st.warning("⚠️ कृपया पहले अपने कमरे की फोटो अपलोड करें!")
-        else:
-            with st.spinner("AI चारों दिशाओं के 4 अलग-अलग लेआउट तैयार कर रहा है..."):
-                time.sleep(2)  # यहाँ आपकी AI API (Fal.ai / Replicate) कॉल होगी
-                
-                # 4 लेआउट्स का डेमो रिस्पॉन्स
-                st.session_state.results = [
-                    {"title": "लेआउट 1: सोफ़ा East Wall + मंदिर North-East (ईशान कोण)", "img": "https://picsum.photos/seed/layout1/800/600"},
-                    {"title": "लेआउट 2: सोफ़ा West Side (ओपन हॉल लुक) + मंदिर East Wall", "img": "https://picsum.photos/seed/layout2/800/600"},
-                    {"title": "लेआउट 3: सेंटर सोफ़ा सिटिंग + सेपरेट मंदिर कॉर्नर", "img": "https://picsum.photos/seed/layout3/800/600"},
-                    {"title": "लेआउट 4: कॉम्पैक्ट L-कॉर्नर + वॉल-माउंटेड बैकलिट मंदिर", "img": "https://picsum.photos/seed/layout4/800/600"},
-                ]
-            st.success("✅ 4 नए लेआउट तैयार हैं!")
-
-    # 4 लेआउट्स का ग्रिड डिस्प्ले
-    if st.session_state.results:
-        st.subheader("✨ आपके लिए जनरेट किए गए 4 विकल्प:")
-        res_col1, res_col2 = st.columns(2)
+    with col_left:
+        st.subheader("1. इनपुट और विकल्प")
+        uploaded_file = st.file_uploader("कमरे की खाली फोटो डालें", type=["jpg", "png", "jpeg"])
         
-        for idx, item in enumerate(st.session_state.results):
-            target_col = res_col1 if idx % 2 == 0 else res_col2
-            with target_col:
-                st.image(item["img"], caption=item["title"], use_container_width=True)
-                st.download_button(f"📥 डाउनलोड {idx+1}", data=b"dummy", file_name=f"layout_{idx+1}.jpg")
+        if uploaded_file:
+            st.image(uploaded_file, caption="अपलोड की गई फोटो", use_container_width=True)
 
-elif st.session_state.active_tab == "गैलरी (Saved Designs)":
-    st.title("🖼️ आपकी सेव की गई डिज़ाइन्स")
-    if st.session_state.results:
-        for idx, item in enumerate(st.session_state.results):
-            st.image(item["img"], caption=item["title"], width=400)
+        # 1-क्लिक चॉइस बटन्स (Pills / Segmented Controls)
+        st.markdown("**सोफ़ा स्टाइल:**")
+        sofa_choice = st.pills(
+            "सोफ़ा स्टाइल",
+            ["L-Shape Corner", "3+1+1 Classic", "Curved Lounge", "Modular 2-Seater"],
+            default="L-Shape Corner",
+            label_visibility="collapsed"
+        )
+
+        st.markdown("**मंदिर का प्रकार व बैकड्रॉप:**")
+        mandir_choice = st.pills(
+            "मंदिर स्टाइल",
+            ["Wood + Warm LED", "White Marble Arch", "Floating Jaali Unit", "Corner Glass Setup"],
+            default="Wood + Warm LED",
+            label_visibility="collapsed"
+        )
+
+        generate_btn = st.button("🚀 4 अलग-अलग लेआउट बनाएं")
+
+    with col_right:
+        st.subheader("2. AI लेआउट परिणाम")
+        
+        # फ्रैग्मेंट: जनरेशन केवल इसी ब्लॉक को प्रोसेस करेगा, पूरा पेज स्टेबल रहेगा
+        @st.fragment
+        def render_layouts(clicked):
+            if clicked:
+                if not uploaded_file:
+                    st.warning("कृपया पहले कमरे की फोटो अपलोड करें!")
+                    return
+                
+                with st.spinner("AI 4 अलग-अलग दिशाओं के लेआउट तैयार कर रहा है..."):
+                    time.sleep(1.5)  # API Call Simulation
+                    st.session_state.layouts = [
+                        {"title": f"लेआउट 1 (East Wall): {sofa_choice} + North {mandir_choice}", "img": "https://picsum.photos/seed/lay1/600/400"},
+                        {"title": f"लेआउट 2 (West Wall): {sofa_choice} + Corner {mandir_choice}", "img": "https://picsum.photos/seed/lay2/600/400"},
+                        {"title": f"लेआउट 3 (Center Setup): {sofa_choice} + East {mandir_choice}", "img": "https://picsum.photos/seed/lay3/600/400"},
+                        {"title": f"लेआउट 4 (Compact Plan): {sofa_choice} + Floating {mandir_choice}", "img": "https://picsum.photos/seed/lay4/600/400"}
+                    ]
+
+            if st.session_state.layouts:
+                g_col1, g_col2 = st.columns(2)
+                for idx, item in enumerate(st.session_state.layouts):
+                    target = g_col1 if idx % 2 == 0 else g_col2
+                    with target:
+                        st.image(item["img"], caption=item["title"], use_container_width=True)
+            else:
+                st.info("विकल्प चुनकर '4 अलग-अलग लेआउट बनाएं' पर क्लिक करें।")
+
+        render_layouts(generate_btn)
+
+# --- TAB 2: GALLERY ---
+with tab_gallery:
+    st.subheader("गैलरी और डाउनलोड्स")
+    if st.session_state.layouts:
+        cols = st.columns(4)
+        for idx, item in enumerate(st.session_state.layouts):
+            with cols[idx]:
+                st.image(item["img"], caption=f"Variant #{idx+1}", use_container_width=True)
+                st.download_button(f"डाउनलोड #{idx+1}", data=b"dummy_bytes", file_name=f"layout_{idx+1}.jpg")
     else:
-        st.info("अभी कोई सेव किया हुआ डिज़ाइन नहीं है।")
+        st.caption("कोई सेव किया हुआ लेआउट उपलब्ध नहीं है।")
 
-elif st.session_state.active_tab == "सेटिंग्स":
-    st.title("⚙️ सेटिंग्स")
-    st.text_input("AI API Key (Replicate / Fal.ai):", type="password")
+# --- TAB 3: SETTINGS ---
+with tab_settings:
+    st.subheader("API और क्लाउड सेटिंग्स")
+    st.text_input("Replicate / Fal.ai API Key", type="password")
+    st.toggle("हाई-रिज़ॉल्यूशन 4K रेंडरिंग चालू करें", value=True)
